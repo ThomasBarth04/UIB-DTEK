@@ -19,6 +19,12 @@ public abstract class ListTest {
 
   abstract List<Integer> getList();
 
+  protected void initializeList(int size) {
+    for (int i = 0; i < size; i++) {
+      list.addLast(i);
+    }
+  }
+
   @Test
   public void addSingleElementTest() {
     Integer element = 42;
@@ -70,12 +76,15 @@ public abstract class ListTest {
     assertEquals(currentSize, newSize - 1);
 
     for (int i = 0; i <= 100; i++) {
-      if (i < index)
+      if (i < index) {
         assertEquals(i, list.get(i));
-      if (i > index)
-        assertEquals(i - 1, list.get(i));
-    }
+      }
 
+      if (i > index) {
+        assertEquals(i - 1, list.get(i));
+      }
+
+    }
   }
 
   @Test
@@ -85,11 +94,7 @@ public abstract class ListTest {
 
     Integer element = 42;
     Integer index = 0;
-
-    System.out.println(list);
     list.add(index, element);
-    System.out.println(list);
-
     assertEquals(element, list.get(index));
 
     for (int i = 0; i < 100; i++) {
@@ -143,4 +148,8 @@ public abstract class ListTest {
     assertEquals(nElements * 2, list.size());
   }
 
+  protected void assertFasterThan(String method, long time, long limit) {
+    assertTrue(time < limit,
+        "Method " + method + " used " + time + "ms time when expected was less than " + limit + "ms");
+  }
 }

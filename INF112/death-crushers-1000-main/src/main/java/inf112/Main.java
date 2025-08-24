@@ -1,12 +1,12 @@
 package inf112;
 
-import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.utils.Os;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import inf112.core.Config;
 import inf112.game.Game;
 import org.lwjgl.system.Configuration;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 
 public class Main {
     public static void main(String[] args) {

@@ -25,7 +25,6 @@ public class Main {
     // process for both LinkedList and ArrayList
     long timeElapsedArray;
     long timeElapsedLinked;
-
     // Random Insertion
     // ArrayList
     System.out.printf("----%sRandom Insertions----%n", formatter.format(N_OPERATIONS));

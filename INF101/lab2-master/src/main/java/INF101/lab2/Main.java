@@ -1,7 +1,7 @@
 package INF101.lab2;
-
-import INF101.lab2.pokemon.IPokemon;
 import INF101.lab2.pokemon.Pokemon;
+import INF101.lab2.pokemon.IPokemon;
+
 
 public class Main {
 

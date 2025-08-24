@@ -1,13 +1,9 @@
 package no.uib.inf101.gridview;
 
-import no.uib.inf101.colorgrid.CellColor;
 import no.uib.inf101.colorgrid.CellPosition;
 import no.uib.inf101.colorgrid.ColorGrid;
-import no.uib.inf101.colorgrid.IColorGrid;
+import no.uib.inf101.colorgrid.CellColor;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
 
 public class Main {
   public static void main(String[] args) {

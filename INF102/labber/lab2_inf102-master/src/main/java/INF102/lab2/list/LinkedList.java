@@ -34,27 +34,30 @@ public class LinkedList<T> implements List<T> {
    *                                   ({@code index < 0 || index >= size()})
    */
   private Node<T> getNode(int index) {
-    if (index < 0 || index >= n) throw new IndexOutOfBoundsException();
+    if (index < 0 || index >= n)
+      throw new IndexOutOfBoundsException();
     Node<T> returnNode = head;
-    for(int i = 0; i < index; i++) returnNode = returnNode.next;
+    for (int i = 0; i < index; i++)
+      returnNode = returnNode.next;
     return returnNode;
   }
 
   @Override
   public void add(int index, T element) {
-    if(index < 0 || index > n) throw new IndexOutOfBoundsException();
+    if (index < 0 || index > n)
+      throw new IndexOutOfBoundsException();
     Node<T> newNode = new Node<>(element);
-    if(index == 0){
+    if (index == 0) {
       newNode.next = head;
       head = newNode;
-    }else{
+    } else {
       Node<T> currentNode = head;
-      for(int i = 0; i < index - 1; i++) currentNode = currentNode.next;
+      for (int i = 0; i < index - 1; i++)
+        currentNode = currentNode.next;
       newNode.next = currentNode.next;
       currentNode.next = newNode;
     }
     n++;
-
   }
 
   @SuppressWarnings("unchecked")
