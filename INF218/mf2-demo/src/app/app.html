@@ -1,2 +1,10 @@
-<h1>hellpo</h1>
-<p>{{ 'greeting' | i18n:{} }}</p>
+<h1>MF2 demo</h1>
+
+<section>
+  <p>Change language:</p>
+  <button type="button" (click)="setLocale('en')">English</button>
+  <button type="button" (click)="setLocale('nb')">Norsk</button>
+</section>
+
+<p>{{ 'greeting' | i18n }}</p>
+<p>{{ 'welcome' | i18n: { name: displayName } }}</p>
