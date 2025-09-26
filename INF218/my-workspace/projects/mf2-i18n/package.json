@@ -1,0 +1,24 @@
+{
+  "name": "mf2-i18n",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "module": "../../dist/mf2-i18n/fesm2022/mf2-i18n.mjs",
+  "types": "../../dist/mf2-i18n/mf2-i18n.d.ts",
+  "exports": {
+    ".": {
+      "import": "../../dist/mf2-i18n/fesm2022/mf2-i18n.mjs"
+    }
+  },
+  "peerDependencies": {
+    "@angular/common": "^20.2.0 || ^20.3.0",
+    "@angular/core": "^20.2.0 || ^20.3.0",
+    "peerDependencies": {
+      "messageformat": "^2.0.0 || ^3.0.0",
+      "sanitize-html": "^2.0.0"
+    }
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
