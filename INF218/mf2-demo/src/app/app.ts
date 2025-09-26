@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { I18nPipe } from 'mf2-i18n'
+import { Component, inject } from '@angular/core';
+import { I18nPipe, I18nStore } from 'mf2-i18n';
 
 @Component({
   standalone: true,
@@ -9,5 +9,11 @@ import { I18nPipe } from 'mf2-i18n'
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('mf2-demo');
+  private readonly store = inject(I18nStore);
+
+  protected readonly displayName = 'Student';
+
+  protected setLocale(locale: string): void {
+    this.store.setLocale(locale);
+  }
 }

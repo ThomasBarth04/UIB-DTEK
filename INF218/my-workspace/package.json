@@ -48,9 +48,7 @@
   "peerDependencies": {
     "@angular/common": "^20.2.0 || ^20.3.0",
     "@angular/core": "^20.2.0 || ^20.3.0",
-    "peerDependencies": {
-      "messageformat": "^2.0.0 || ^3.0.0",
-      "sanitize-html": "^2.0.0"
-    }
+    "messageformat": "^4.0.0-13",
+    "sanitize-html": "^2.0.0"
   }
 }
