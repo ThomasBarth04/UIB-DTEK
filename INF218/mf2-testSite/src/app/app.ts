@@ -6,7 +6,6 @@ import { I18nPipe, I18nStore } from 'mf2-i18n';
   selector: 'app-root',
   imports: [I18nPipe],
   templateUrl: './app.html',
-  styleUrl: './app.css'
 })
 export class App {
   private readonly store = inject(I18nStore);

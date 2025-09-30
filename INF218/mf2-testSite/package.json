@@ -1,5 +1,5 @@
 {
-  "name": "mf2-demo",
+  "name": "mf2-test-site",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -28,12 +28,10 @@
     "@angular/forms": "^20.2.0",
     "@angular/platform-browser": "^20.2.0",
     "@angular/router": "^20.2.0",
-    "messageformat": "^4.0.0-13",
-    "mf2-i18n": "file:../my-workspace/dist/mf2-i18n",
     "rxjs": "~7.8.0",
-    "sanitize-html": "^2.17.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.15.0",
+    "mf2-i18n": "../my-workspace/projects/mf2-i18n/"
   },
   "devDependencies": {
     "@angular/build": "^20.2.2",

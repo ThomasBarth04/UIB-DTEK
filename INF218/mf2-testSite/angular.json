@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "mf2-demo": {
+    "mf2-testSite": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mf2-demo:build:production"
+              "buildTarget": "mf2-testSite:build:production"
             },
             "development": {
-              "buildTarget": "mf2-demo:build:development"
+              "buildTarget": "mf2-testSite:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -88,8 +88,5 @@
         }
       }
     }
-  },
-  "cli": {
-    "analytics": false
   }
 }
