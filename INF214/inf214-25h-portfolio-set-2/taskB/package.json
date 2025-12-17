@@ -1,0 +1,22 @@
+{
+    "name": "clearable",
+    "type": "module",
+    "scripts": {
+        "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles",
+        "demo": "node demo.js"
+    },
+    "license": "ISC",
+    "devDependencies": {
+        "globals": "^15.3.0",
+        "jest": "^29.7.0"
+    },
+    "jest": {
+        "reporters": [
+            "default"
+        ]
+    },
+    "dependencies": {
+        "jest-junit": "^16.0.0",
+        "aggregate-error": "^5.0.0"
+    }
+}
