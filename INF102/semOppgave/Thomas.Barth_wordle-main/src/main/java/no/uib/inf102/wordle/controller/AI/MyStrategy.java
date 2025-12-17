@@ -9,37 +9,39 @@ import java.util.Map;
 
 public class MyStrategy implements IStrategy {
 
+  private Dictionary dictionary;
+  private WordleWordList guesses;
+  private int guessCount = 0;
+  private ArrayList<WordleWord> feedbacks = new ArrayList<>();
 
-    private Dictionary dictionary;
-    private WordleWordList guesses;
-    private int guessCount = 0;
-    private ArrayList<WordleWord> feedbacks = new ArrayList<>();
-    //avg: 3.455, Seed:14212l, N_games: 200
-    public MyStrategy(Dictionary dictionary) {
-        this.dictionary = dictionary;
-        reset();
-    }
-    @Override
-    public String makeGuess(WordleWord feedback) {
-        if(feedback != null) {
-            guesses.eliminateWords(feedback);
-            feedbacks.add(feedback);
-        }
-        if(guessCount < 1){
-            guessCount++;
-            Map<Character,Integer>[] letterFrequencies = guesses.calculateLetterFrequencies(guesses.possibleAnswers());
-            return guesses.calculateFirstGuess(guesses.possibleAnswers(),letterFrequencies);
-        }
+  // avg: 3.455, Seed:14212l, N_games: 200
+  public MyStrategy(Dictionary dictionary) {
+    this.dictionary = dictionary;
+    System.out.println(dictionary.getAnswerWordsList().size());
+    reset();
+  }
 
-        return guesses.bestGuessBasedOnEntropy();
+  @Override
+  public String makeGuess(WordleWord feedback) {
+    if (feedback != null) {
+      guesses.eliminateWords(feedback);
+      feedbacks.add(feedback);
+    }
+    if (guessCount < 1) {
+      guessCount++;
+      Map<Character, Integer>[] letterFrequencies = guesses.calculateLetterFrequencies(guesses.possibleAnswers());
+      return guesses.calculateFirstGuess(guesses.possibleAnswers(), letterFrequencies);
     }
 
-    @Override
-    public void reset() {
-        // TODO: Implement me :)
-        feedbacks.clear();
-        guessCount = 0;
-        guesses = new WordleWordList(dictionary);
-    }
-    
+    return guesses.bestGuessBasedOnEntropy();
+  }
+
+  @Override
+  public void reset() {
+    // TODO: Implement me :)
+    feedbacks.clear();
+    guessCount = 0;
+    guesses = new WordleWordList(dictionary);
+  }
+
 }

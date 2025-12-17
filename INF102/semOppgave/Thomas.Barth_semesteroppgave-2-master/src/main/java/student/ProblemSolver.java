@@ -6,26 +6,26 @@ import graph.*;
 
 public class ProblemSolver implements IProblem {
 
-  //O(m*logn)
+  // O(m*logn)
   public <V, E extends Comparable<E>> LinkedList<Edge<V>> mst(WeightedGraph<V, E> g) {
     LinkedList<Edge<V>> solution = new LinkedList<>();// O(1)
 
     PriorityQueue<Edge<V>> pq = new PriorityQueue<>(g);// O(1)
 
-    V currentNode = g.getFirstNode();//O(1)
+    V currentNode = g.getFirstNode();// O(1)
 
-    Edge<V> currentEdge;//O(1)
+    Edge<V> currentEdge;// O(1)
 
     Set<V> visited = new HashSet<>();// O(1)
-    visited.add(currentNode);//O(1)
+    visited.add(currentNode);// O(1)
 
-    addNewEdgesToQue(pq, g, currentNode, visited);//O(m*logn)
-    while (visited.size() < g.verticesCount()) {//O(n * m * logn)
-      if (pq.isEmpty()) {//O(1)
+    addNewEdgesToQue(pq, g, currentNode, visited);// O(m*logn)
+    while (visited.size() < g.verticesCount()) {// O(n * m * logn)
+      if (pq.isEmpty()) {// O(1)
         System.out.println("Tree not connected");
         return solution;
       } else {
-        currentEdge = pq.poll();//O(logn)
+        currentEdge = pq.poll();// O(logn)
       }
 
       if (visited.contains(currentEdge.a) && visited.contains(currentEdge.b)) {// O(1)
@@ -35,13 +35,14 @@ public class ProblemSolver implements IProblem {
         currentNode = visited.contains(currentEdge.a) ? currentEdge.b : currentEdge.a;// O(1)
         visited.add(currentNode);// O(1)*
       }
-      addNewEdgesToQue(pq, g, currentNode, visited);//O(m*logn)
+      addNewEdgesToQue(pq, g, currentNode, visited);// O(m*logn)
     }
     return solution;
   }
 
   // O(m*logn)
-  private <V, E extends Comparable<E>> void addNewEdgesToQue(PriorityQueue<Edge<V>> pq, WeightedGraph<V, E> g, V currentNode, Set<V> visited) {
+  private <V, E extends Comparable<E>> void addNewEdgesToQue(PriorityQueue<Edge<V>> pq, WeightedGraph<V, E> g,
+      V currentNode, Set<V> visited) {
     for (Edge<V> adjecentEdge : g.adjacentEdges(currentNode)) {
       if (!visited.contains(adjecentEdge.a) || !visited.contains(adjecentEdge.b)) {
         pq.add(adjecentEdge);
@@ -111,7 +112,7 @@ public class ProblemSolver implements IProblem {
 
   @Override
   public <V> Edge<V> addRedundant(Graph<V> g, V root) {
-    Map<V, Integer> childrenCount = countChildrenInMst(g,root);
+    Map<V, Integer> childrenCount = countChildrenInMst(g, root);
     Set<V> visited = new HashSet<>();
     visited.add(root);
 
@@ -120,9 +121,9 @@ public class ProblemSolver implements IProblem {
     int maxA = 0;
     int maxB = 0;
 
-    for(V child : g.neighbours(root)){//O(n)
+    for (V child : g.neighbours(root)) {// O(n)
       int children = childrenCount.get(child);
-      if(children > maxA){
+      if (children > maxA) {
         maxB = maxA;
         nodeB = nodeA;
 
@@ -130,31 +131,33 @@ public class ProblemSolver implements IProblem {
         nodeA = child;
         continue;
       }
-      if(children > maxB){
+      if (children > maxB) {
         maxB = children;
         nodeB = child;
       }
     }
 
-    nodeA = getOptimalNode(childrenCount,nodeA,g,visited);//O(n)
-    //edge case: root has degree 1
-    if(nodeB != root){
-      nodeB = getOptimalNode(childrenCount,nodeB,g,visited);//O(n)
+    nodeA = getOptimalNode(childrenCount, nodeA, g, visited);// O(n)
+    // edge case: root has degree 1
+    if (nodeB != root) {
+      nodeB = getOptimalNode(childrenCount, nodeB, g, visited);// O(n)
     }
 
-    return new Edge<>(nodeA,nodeB);
+    return new Edge<>(nodeA, nodeB);
   }
-  public <V> Map<V,Integer> countChildrenInMst(Graph<V> g, V root) {
-    Map<V,Integer> childrenCount = new HashMap<>();
+
+  public <V> Map<V, Integer> countChildrenInMst(Graph<V> g, V root) {
+    Map<V, Integer> childrenCount = new HashMap<>();
     Set<V> visited = new HashSet<>();
-    dfs(root,g,childrenCount,visited);
+    dfs(root, g, childrenCount, visited);
     return childrenCount;
   }
-  private <V> int dfs(V start, Graph<V> g,Map<V,Integer> childrenCount, Set<V> visited){
+
+  private <V> int dfs(V start, Graph<V> g, Map<V, Integer> childrenCount, Set<V> visited) {
     visited.add(start);
     int numChildren = 0;
-    for(V neighbour : g.neighbours(start)){
-      if(!visited.contains(neighbour)){
+    for (V neighbour : g.neighbours(start)) {
+      if (!visited.contains(neighbour)) {
         int children = dfs(neighbour, g, childrenCount, visited);
         numChildren += children + 1;
       }
@@ -163,16 +166,16 @@ public class ProblemSolver implements IProblem {
     return numChildren;
   }
 
-  private <V> V getOptimalNode(Map<V,Integer> childrenCount, V start, Graph<V> g, Set<V> visited) {
+  private <V> V getOptimalNode(Map<V, Integer> childrenCount, V start, Graph<V> g, Set<V> visited) {
     V currentNode = start;
     visited.add(start);
-    while(childrenCount.get(currentNode) != g.degree(currentNode) - 1){
+    while (childrenCount.get(currentNode) != g.degree(currentNode) - 1) {
       int max = 0;
-      for(V child : g.neighbours(currentNode)){
-        if(visited.contains(child)){
+      for (V child : g.neighbours(currentNode)) {
+        if (visited.contains(child)) {
           continue;
         }
-        if(childrenCount.get(child) > max){
+        if (childrenCount.get(child) > max) {
           max = childrenCount.get(child);
           currentNode = child;
         }
