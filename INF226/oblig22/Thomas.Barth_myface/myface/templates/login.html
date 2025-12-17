@@ -1,0 +1,29 @@
+{% extends "_layout.html" %}
+{% from "field.html" import render_field %}
+
+<!-- The page title -->
+{% block title %}Log in to MyFace™{% endblock %}
+
+<!-- The page content -->
+{% block content %}
+<h1>Log in to MyFace™</h1>
+<div class="login">
+<form class="login" action="/login/" method="post">
+    <fieldset>
+    <legend>Password login</legend>
+        {{ render_field(form.username) }}
+        {{ render_field(form.password) }}
+        {{ form.login }}
+    </fieldset>
+    {{ form.csrf_token }}
+    {{ form.next }}
+</form>
+<p>or
+<form class="login" action="{{ url_for('login_gitlab')}}"  method="get">
+    <fieldset>
+    <legend>OIDC login</legend>
+        <button type="submit">Log in with git.app.uib.no</button>
+    </fieldset>
+</form>
+</div>
+{% endblock %}
