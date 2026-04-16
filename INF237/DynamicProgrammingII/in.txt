@@ -1,10 +1,7 @@
-9
-Barbara 3.5 CEO
-Rose 5.1 Barbara
-Seth 2.9 Rose
-Virgil 3.8 Wilbur
-Mildred 4.4 Zack
-Wilbur 2.7 Barbara
-Tina 3.7 Zack
-Ken 4.0 Mildred
-Zack 4.2 Barbara
+5 home 0 0
+work 5 5
+kwik-ee-burger 4 5
+flagpole 2.5 2.5
+cleaners 0 1
+cleaners kwik-ee-burger
+flagpole kwik-ee-burger cleaners

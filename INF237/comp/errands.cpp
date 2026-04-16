@@ -1,131 +1,118 @@
-#include <bits/stdc++.h>
+// =============================================================
+// ERRANDS SCHEDULING — Greedy Minimise Weighted Completion Time
+// =============================================================
+//
+// PROBLEM: n tasks, each with:
+//   p = base completion cost (paid once, at the time of selection)
+//   r = rate (multiplied by the total time elapsed before this task starts)
+//   d = duration (time consumed by this task)
+//
+// Total cost = Σ (p_i + r_i * start_time_i)
+//   where start_time_i = sum of durations of all tasks scheduled before i.
+//
+// GOAL: Choose the order of tasks to MINIMISE total cost.
+//
+// GREEDY PROOF (exchange argument):
+//   Consider two adjacent tasks A (scheduled first) and B:
+//   Cost(A before B) = pA + rA*t + pB + rB*(t + dA)
+//   Cost(B before A) = pB + rB*t + pA + rA*(t + dB)
+//   A before B is better iff:
+//     rB * dA < rA * dB
+//     ↔  dA/rA < dB/rB   (sort by d/r ascending, avoiding division with d*r comparison)
+//
+// IMPLEMENTATION:
+//   This file uses a more efficient bucket/set approach for the greedy:
+//   - Group tasks by their duration d (xss[d] = list of rates r for tasks with that d).
+//   - At each step, pick the task with the lowest d * (total_rate - r).
+//     The "cost" of picking a task = how much we delay all REMAINING tasks.
+//     Picking task with (d, r) costs d * (total_rate - r) extra to all remaining tasks.
+//   - After picking, subtract r from total_rate, remove from bucket.
+//
+// WHY d * (total_rate - r)?
+//   total_rate - r = sum of rates of all OTHER tasks.
+//   d = how long we delay them.
+//   So d * (total_rate - r) = total extra cost we impose by scheduling this task next.
+//
+// TIME: O(n log n)  (sorting and greedy selection)
+// =============================================================
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <map>
+#include <queue>
+#include <set>
+#include <algorithm>
+#include <cstdint>
+
 using namespace std;
-
-struct Point {
-  double x;
-  double y;
-};
-
-static double dist(const Point &a, const Point &b) {
-  double dx = a.x - b.x;
-  double dy = a.y - b.y;
-  return sqrt(dx * dx + dy * dy);
-}
+using u64 = uint64_t;
 
 int main() {
-  ios::sync_with_stdio(false);
-  cin.tie(nullptr);
+    cin.tie(nullptr);
+    ios::sync_with_stdio(false);
+    cin.exceptions(ios::failbit);
+    cout << setprecision(10) << fixed;
 
-  int n;
-  if (!(cin >> n)) {
-    return 0;
-  }
+    u64 n, p, r, d;
+    cin >> n;
 
-  unordered_map<string, int> id;
-  vector<string> names(n);
-  vector<Point> points(n);
+    u64 total_rate {0}; // sum of all r values (reduces as we schedule tasks)
+    u64 ret {0};        // running total cost (start with sum of all p values)
 
-  for (int i = 0; i < n; ++i) {
-    cin >> names[i] >> points[i].x >> points[i].y;
-    id[names[i]] = i;
-  }
+    // Group tasks by duration d: xss[d] = list of rates r for tasks with this d
+    vector<vector<u64>> xss(10001);
+    vector<bool> seen(10001);   // which durations have been seen
+    set<u64> ds;                // set of distinct durations present
 
-  const int work = id["work"];
-  const int home = id["home"];
-
-  string line;
-  getline(cin, line);
-
-  constexpr double INF = 1e100;
-  while (getline(cin, line)) {
-    if (line.empty()) {
-      continue;
-    }
-
-    istringstream iss(line);
-    vector<string> stops;
-    string stop;
-    while (iss >> stop) {
-      stops.push_back(stop);
-    }
-
-    int m = (int)stops.size();
-    vector<int> stopIds(m);
-    for (int i = 0; i < m; ++i) {
-      stopIds[i] = id[stops[i]];
-    }
-
-    vector<double> fromWork(m), toHome(m);
-    vector<vector<double>> between(m, vector<double>(m, 0.0));
-    for (int i = 0; i < m; ++i) {
-      fromWork[i] = dist(points[work], points[stopIds[i]]);
-      toHome[i] = dist(points[stopIds[i]], points[home]);
-      for (int j = 0; j < m; ++j) {
-        between[i][j] = dist(points[stopIds[i]], points[stopIds[j]]);
-      }
-    }
-
-    int fullMask = 1 << m;
-    vector<vector<double>> dp(fullMask, vector<double>(m, INF));
-    vector<vector<int>> parent(fullMask, vector<int>(m, -1));
-
-    for (int i = 0; i < m; ++i) {
-      dp[1 << i][i] = fromWork[i];
-    }
-
-    for (int mask = 1; mask < fullMask; ++mask) {
-      for (int last = 0; last < m; ++last) {
-        if (!(mask & (1 << last))) {
-          continue;
+    for (u64 i {0}; i < n; i++) {
+        cin >> p >> r >> d;
+        ret += p;           // base cost: always paid (order-independent)
+        xss[d].push_back(r); // group rate by duration
+        total_rate += r;
+        if (!seen[d]) {
+            seen[d] = true;
+            ds.insert(d); // track distinct durations
         }
-        if (dp[mask][last] >= INF / 2) {
-          continue;
+    }
+
+    // Sort each bucket of rates in ascending order
+    // (we'll pick the LARGEST rate task from each bucket, so sort ascending and pop_back)
+    for (u64 d : ds) {
+        sort(xss[d].begin(), xss[d].end());
+    }
+
+    u64 time {0}; // current elapsed time
+
+    // Greedy: repeatedly pick the task that minimises additional delay cost
+    while (ds.size()) {
+        u64 best_d = -1;
+        u64 best_cost = -1;
+
+        // Find which (duration, rate) pair has the minimum "delay cost"
+        // For each duration group, consider its highest-rate task (best candidate)
+        for (u64 d : ds) {
+            u64 r = xss[d][xss[d].size()-1]; // largest rate in this duration group
+            u64 cost = d * (total_rate - r);  // delay imposed on all other tasks
+            if (best_cost == -1 || cost < best_cost) {
+                best_cost = cost;
+                best_d = d;
+            }
         }
 
-        for (int nxt = 0; nxt < m; ++nxt) {
-          if (mask & (1 << nxt)) {
-            continue;
-          }
-          int nextMask = mask | (1 << nxt);
-          double cand = dp[mask][last] + between[last][nxt];
-          if (cand < dp[nextMask][nxt]) {
-            dp[nextMask][nxt] = cand;
-            parent[nextMask][nxt] = last;
-          }
+        // Pick the best task: highest-rate task from the best duration bucket
+        u64 r = *xss[best_d].rbegin();
+        ret += best_d * (total_rate - r); // add the delay cost to total
+        time += best_d;                   // advance time by this task's duration
+        total_rate -= r;                  // this task's rate no longer delays others
+
+        // Remove the chosen task from its bucket
+        xss[best_d].pop_back();
+        if (xss[best_d].size() == 0) {
+            ds.erase(best_d); // no more tasks with this duration
         }
-      }
     }
 
-    int bestLast = 0;
-    double bestCost = INF;
-    int doneMask = fullMask - 1;
-    for (int last = 0; last < m; ++last) {
-      double total = dp[doneMask][last] + toHome[last];
-      if (total < bestCost) {
-        bestCost = total;
-        bestLast = last;
-      }
-    }
-
-    vector<int> order;
-    int mask = doneMask;
-    int cur = bestLast;
-    while (cur != -1) {
-      order.push_back(cur);
-      int prev = parent[mask][cur];
-      mask ^= 1 << cur;
-      cur = prev;
-    }
-    reverse(order.begin(), order.end());
-
-    for (int i = 0; i < m; ++i) {
-      if (i) {
-        cout << ' ';
-      }
-      cout << stops[order[i]];
-    }
-    cout << '\n';
-  }
-
-  return 0;
+    cout << ret << '\n'; // minimum total cost
 }

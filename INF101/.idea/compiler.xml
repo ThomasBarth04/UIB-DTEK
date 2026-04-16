@@ -8,12 +8,14 @@
         <outputRelativeToContentRoot value="true" />
         <module name="INF101GridLab (1) (no.uib.inf101.tetris)" />
         <module name="lab0" />
+        <module name="INF101GridLab (2) (no.uib.inf101.tetris)" />
         <module name="Empty" />
         <module name="lab1" />
         <module name="INF101ShellLab" />
         <module name="lab2" />
         <module name="INF101GridLab" />
         <module name="lab5" />
+        <module name="INF101GridLab (1) (no.uib.inf101.grid)" />
       </profile>
     </annotationProcessing>
   </component>

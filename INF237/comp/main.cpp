@@ -1,73 +1,157 @@
+// =============================================================
+// ERRANDS (comp version) — TSP via Bitmask DP (Cleaner Implementation)
+// =============================================================
+//
+// Same algorithm as DynamicProgrammingII/errands.cpp — Held-Karp TSP.
+// This version is a cleaner rewrite:
+//   - Uses unordered_map<string, int> for name→id lookup (faster than map)
+//   - Processes multiple tasks per input (one line per task, empty line separates nothing)
+//   - Stores all location points in a flat vector<Point> (no map lookup in hot loop)
+//
+// See DynamicProgrammingII/errands.cpp for the full algorithm explanation and diagrams.
+//
+// KEY DIFFERENCES:
+//   1. Location names mapped to integer IDs up front (id["work"], id["home"])
+//   2. between[i][j], fromWork[i], toHome[i] precomputed for each task's stops
+//   3. parent[][] array tracks which stop was visited before each (mask, stop) state
+//      (enables path reconstruction)
+//   4. Skips empty lines instead of breaking on them
+//
+// DP RECAP:
+//   dp[mask][last] = min distance starting from work, visiting all stops in mask,
+//                    ending at stop 'last'.
+//   Base:  dp[1<<i][i] = dist(work, stop_i)
+//   Trans: dp[mask|(1<<nxt)][nxt] = min(dp[mask][last] + dist(last, nxt))
+//   Final: min over last of dp[FULL-1][last] + dist(last, home)
+// =============================================================
+
 #include <bits/stdc++.h>
 using namespace std;
+
+struct Point {
+  double x;
+  double y;
+};
+
+// Euclidean distance between two points
+static double dist(const Point &a, const Point &b) {
+  double dx = a.x - b.x;
+  double dy = a.y - b.y;
+  return sqrt(dx * dx + dy * dy);
+}
 
 int main() {
   ios::sync_with_stdio(false);
   cin.tie(nullptr);
 
-  int n, k;
-  if (!(cin >> n >> k))
-    return 0;
+  int n;
+  if (!(cin >> n)) return 0; // number of named locations
 
-  vector<vector<int>> children(n);
-  for (int i = 1; i < n; ++i) {
-    int p;
-    cin >> p;
-    children[p].push_back(i);
+  unordered_map<string, int> id; // location name → index
+  vector<string> names(n);
+  vector<Point> points(n);
+
+  for (int i = 0; i < n; ++i) {
+    cin >> names[i] >> points[i].x >> points[i].y;
+    id[names[i]] = i;
   }
 
-  vector<int> order;
-  order.reserve(n);
-  vector<int> st = {0};
-  while (!st.empty()) {
-    int v = st.back();
-    st.pop_back();
-    order.push_back(v);
-    for (int u : children[v])
-      st.push_back(u);
-  }
-  reverse(order.begin(), order.end());
+  const int work = id["work"];
+  const int home = id["home"];
 
-  const int NEG = -1000000000;
-  vector<vector<int>> dp(n, vector<int>(k + 1, NEG));
+  string line;
+  getline(cin, line); // consume newline after location list
 
-  for (int v : order) {
-    vector<int> cur(k + 1, NEG);
-    cur[k] = 0;
-    cur[0] = 1;
+  constexpr double INF = 1e100;
 
-    for (int u : children[v]) {
-      vector<int> nxt(k + 1, NEG);
+  // Process each task (one line = one set of errands)
+  while (getline(cin, line)) {
+    if (line.empty()) continue; // skip blank lines
 
-      for (int d1 = 0; d1 <= k; ++d1) {
-        if (cur[d1] <= NEG / 2)
-          continue;
+    istringstream iss(line);
+    vector<string> stops;
+    string stop;
+    while (iss >> stop) stops.push_back(stop);
 
-        for (int d2u = 0; d2u <= k; ++d2u) {
-          if (dp[u][d2u] <= NEG / 2)
-            continue;
-
-          int d2 = d2u + 1;
-          if (d2 > k)
-            d2 = k;
-
-          if (d1 < k && d2 < k && d1 + d2 < k)
-            continue;
-
-          int nd = min(d1, d2);
-          nxt[nd] = max(nxt[nd], cur[d1] + dp[u][d2u]);
-        }
-      }
-
-      cur.swap(nxt);
+    int m = (int)stops.size(); // number of errands in this task
+    vector<int> stopIds(m);
+    for (int i = 0; i < m; ++i) {
+      stopIds[i] = id[stops[i]]; // resolve name → point index
     }
 
-    dp[v] = move(cur);
+    // Precompute distances for this task
+    vector<double> fromWork(m), toHome(m);
+    vector<vector<double>> between(m, vector<double>(m, 0.0));
+    for (int i = 0; i < m; ++i) {
+      fromWork[i] = dist(points[work], points[stopIds[i]]);
+      toHome[i]   = dist(points[stopIds[i]], points[home]);
+      for (int j = 0; j < m; ++j) {
+        between[i][j] = dist(points[stopIds[i]], points[stopIds[j]]);
+      }
+    }
+
+    int fullMask = 1 << m; // 2^m subsets
+
+    // dp[mask][last] = min distance from work, visiting stops in mask, ending at 'last'
+    vector<vector<double>> dp(fullMask, vector<double>(m, INF));
+    // parent[mask][last] = which stop came before 'last' in the optimal path to (mask, last)
+    vector<vector<int>> parent(fullMask, vector<int>(m, -1));
+
+    // Base case: go from work to a single stop as first errand
+    for (int i = 0; i < m; ++i) {
+      dp[1 << i][i] = fromWork[i];
+    }
+
+    // Fill DP: extend each partial path to an unvisited stop
+    for (int mask = 1; mask < fullMask; ++mask) {
+      for (int last = 0; last < m; ++last) {
+        if (!(mask & (1 << last))) continue;  // 'last' not in mask
+        if (dp[mask][last] >= INF / 2) continue; // unreachable
+
+        for (int nxt = 0; nxt < m; ++nxt) {
+          if (mask & (1 << nxt)) continue; // 'nxt' already visited
+
+          int nextMask = mask | (1 << nxt);
+          double cand = dp[mask][last] + between[last][nxt];
+          if (cand < dp[nextMask][nxt]) {
+            dp[nextMask][nxt] = cand;
+            parent[nextMask][nxt] = last; // record predecessor
+          }
+        }
+      }
+    }
+
+    // Find which final stop minimises total distance (including home leg)
+    int bestLast = 0;
+    double bestCost = INF;
+    int doneMask = fullMask - 1; // all stops visited
+    for (int last = 0; last < m; ++last) {
+      double total = dp[doneMask][last] + toHome[last];
+      if (total < bestCost) {
+        bestCost = total;
+        bestLast = last;
+      }
+    }
+
+    // Reconstruct path by following parent pointers backwards
+    vector<int> order;
+    int mask = doneMask;
+    int cur = bestLast;
+    while (cur != -1) {
+      order.push_back(cur);
+      int prev = parent[mask][cur];
+      mask ^= 1 << cur; // remove cur from mask (trace backwards)
+      cur = prev;
+    }
+    reverse(order.begin(), order.end()); // path was collected backwards
+
+    // Print optimal errand order
+    for (int i = 0; i < m; ++i) {
+      if (i) cout << ' ';
+      cout << stops[order[i]];
+    }
+    cout << '\n';
   }
 
-  int ans = 0;
-  for (int d = 0; d <= k; ++d)
-    ans = max(ans, dp[0][d]);
-  cout << ans << '\n';
   return 0;
 }

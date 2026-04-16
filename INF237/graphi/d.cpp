@@ -1,84 +1,118 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <iomanip>
-#include <map>
-#include <queue>
-#include <set>
-#include <algorithm>
-#include <cstdint>
+// =============================================================
+// GET SHORTY — Modified Dijkstra for Maximum Probability Path
+// =============================================================
+//
+// PROBLEM: Graph where each edge has a "survival probability" weight
+//          (a decimal between 0 and 1). Find the path from node 0 to
+//          node n-1 that MAXIMISES the product of edge weights.
+//
+// IDEA: Use Dijkstra, but instead of minimising total distance,
+//       MAXIMISE the product of probabilities.
+//
+// CHANGE FROM STANDARD DIJKSTRA:
+//   - dist[v] = maximum probability of reaching v from source
+//   - Initialise dist[0] = 1.0 (100% chance at start)
+//   - Relaxation: if dist[u] * weight(u,v) > dist[v], update dist[v]
+//   - Priority queue is a MAX-heap (normal: min-heap)
+//   - Skip stale entries where weight < dist[node] (not just !=)
+//
+// WHY NOT LOG-SUM? Could also convert to -log(weight) and minimise sum,
+//   but the direct multiplication approach is equally valid and simpler.
+//
+// DIAGRAM:
+//   0 --0.5-- 1 --0.8-- 2
+//   0 --0.9-- 2
+//   Best path 0→2: direct 0.9 vs 0→1→2 = 0.5*0.8=0.4 → answer: 0.9000
+//
+// TIME: O((V + E) log V)
+// =============================================================
 
+#include <cstdint>
+#include <iomanip>
+#include <iostream>
+#include <queue>
+#include <vector>
 using namespace std;
 
+struct Edge {
+  int a;
+  int b;
+  double weight; // probability of surviving this edge (0 to 1)
+};
+
+struct Node {
+  int id;
+  vector<Edge> edges;
+};
+
+// Max-heap comparator for edges: prefer SMALLER weight (for min-heap behaviour in std::pq)
+// But wait — we WANT a max-heap for probabilities.
+// std::priority_queue is a max-heap by default.
+// This comparator: returns true when a < b, making pq give the LARGEST element first.
+// Actually: pq uses this to say "a is less than b", so the largest priority_queue.top().
+class Compare {
+public:
+  bool operator()(Edge a, Edge b) {
+    if (a.weight < b.weight) {
+      return true; // b has higher weight → b should come out first (max-heap)
+    }
+    return false;
+  }
+};
+
 int main() {
-    cin.tie(nullptr);
-    ios::sync_with_stdio(false);
-    cin.exceptions(ios::failbit);
-    cout << setprecision(10) << fixed;
+  cout << setprecision(4) << fixed;
 
-    int n, p, r, d;
-    cin >> n;
-    int total {0};
-    vector<pair<int,pair<int,int>>> xs(n);
-    vector<pair<int,pair<int,int>>> ys;
-    for (int i {0}; i < n; i++) {
-        cin >> p >> r >> d;
-        xs[i] = {r, {p, d}};
-        total += r;
+  while (true) {
+    int n, m;
+    cin >> n >> m;
+    if (n == 0 && m == 0) {
+      break; // sentinel: input ends with "0 0"
+    }
+    vector<vector<Edge>> edges(n); // adjacency list
+
+    for (int i = 0; i < m; i++) {
+      int a, b;
+      double weight;
+      cin >> a >> b >> weight;
+      Edge e = {a, b, weight};
+      edges[a].push_back(e); // undirected: add both directions
+      edges[b].push_back(e);
     }
 
-    // int prev_best = -1;
-    // int time {0};
-    // int total_cost {0};
-    // bool first = true;
-    // while (n > 1) {
-    //     int best = 999999999;
-    //     int best_i = -1;
-    //     ys = {};
-    //     for (int i {0}; i < n; i++) {
-    //         if (i == prev_best) continue;
-    //         auto [r, pd] = xs[i];
-    //         auto [p, d] = pd;
-    //         int cost = (total - r) * d;
-    //         if (cost < best) {
-    //             best = cost;
-    //             best_i = i;
-    //         }
-    //         ys.push_back(xs[i]);
-    //     }
-    //     // cout << "time: " << time << '\n'; 
-    //     // cout << "picking " << best_i << '\n';
-    //     // cout << "adding " << xs[best_i].second.first + time * xs[best_i].first << '\n';
-    //     prev_best = best_i;
-    //     total -= xs[best_i].first;
-    //     total_cost += xs[best_i].second.first + time * xs[best_i].first;
-    //     time += xs[best_i].second.second;
-    //     xs = ys;
-    //     if (!first) n--;
-    //     first = false;
-    // }
+    // dist[v] = best (maximum) probability of reaching v from node 0
+    priority_queue<pair<double, int>> pq; // max-heap: {probability, node}
+    vector<double> dist(n, 0);
+    vector<bool> visited(n, false);
+    dist[0] = 1; // start at node 0 with probability 1.0
+    pq.push({dist[0], 0});
 
-    // cout << total_cost << '\n';
+    while (!pq.empty()) {
+      auto current = pq.top();
+      pq.pop();
+      double weight = current.first; // current best probability
+      int b = current.second;        // current node
 
-    cout << "total is " << total << '\n';
-    for (auto [r, pd] : xs) {
-        auto [p, d] = pd;
-        cout << "cost of picking " << p << ", " << r << ", " << d << " is " << d * (total - r) << '\n';
-    }
-    sort(xs.begin(), xs.end(), [total](pair<int,pair<int,int>>& a, pair<int,pair<int,int>>& b) { 
-        return a.second.second * (total-a.first) < b.second.second * (total-b.first);
-    });
+      // Skip stale entries (we already found a better path to b)
+      if (weight < dist[b]) {
+        continue;
+      }
 
-    int time {0};
-    int cost {0};
-    for (auto [r, pd] : xs) {
-        auto [p, d] = pd;
-        // cout << "choosing " << p << ", " << r << ", " << d << '\n';
-        cost += p + r*time;
-        time += d;
+      // Relax all edges from b
+      for (auto edge : edges[b]) {
+        int a = edge.a;
+        int next = (a == b) ? edge.b : a; // find the other endpoint
+
+        // New candidate probability = current probability × edge weight
+        double candidate = dist[b] * edge.weight;
+        if (candidate > dist[next]) {
+          dist[next] = candidate;
+          pq.push({dist[next], next}); // push updated probability
+        }
+      }
     }
 
-    cout << cost << '\n';
-
+    cout << dist[n - 1] << endl; // best probability of reaching node n-1
+  }
+  return 0;
 }
-
