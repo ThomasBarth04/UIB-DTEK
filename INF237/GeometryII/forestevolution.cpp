@@ -1,19 +1,22 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <iomanip> 
 
 using namespace std;
 
 double cross(pair<double, double> a, pair<double, double> b,
              pair<double, double> c);
 
-pair<double, double> intersect(pair<double, double> a, pair<double, double> b);
+pair<double, double> intersect(pair<double, double> a, pair<double, double> b,
+                               pair<double, double> c, pair<double, double> d);
 double area(vector<pair<double, double>> &poly);
 vector<pair<double, double>> convexHull(vector<pair<double, double>> &points);
 vector<pair<double, double>> cp(vector<pair<double, double>> &poly,
                                 pair<double, double> a, pair<double, double> b);
 
 int main() {
+  cout << fixed << setprecision(15);
 
   int p, a;
   cin >> p >> a;
@@ -42,6 +45,10 @@ int main() {
   for (int i = 0; i < m && !inter.empty(); i++) {
     inter = cp(inter, ha[i], ha[(i + 1) % m]);
   }
+  if (inter.size() < 3) {
+    cout << 0.0 << "\n";
+    return 0;
+  }
 
   cout << area(inter) << "\n";
   return 0;
@@ -64,6 +71,7 @@ pair<double, double> intersect(pair<double, double> a, pair<double, double> b,
   double C2 = A2 * c.first + B2 * c.second;
 
   double det = A1 * B2 - A2 * B1;
+  if (abs(det) < 1e-12) return a;
   double x = (B2 * C1 - B1 * C2) / det;
   double y = (C2 * A1 - C1 * A2) / det;
   return {x, y};
@@ -79,18 +87,19 @@ vector<pair<double, double>> cp(vector<pair<double, double>> &poly,
     pair<double, double> t = poly[(i + 1) % n];
     double cs = cross(a, b, s);
     double ct = cross(a, b, t);
-    if (cs >= 0) {
-      res.push_back(intersect(a, b, s, t));
+    if (cs >= 0){
+      res.push_back(s);
     }
-    if ((cs > 0) != (ct > 0)) {
+
+    if ((cs >= 0) != (ct >= 0))
       res.push_back(intersect(a, b, s, t));
-    }
   }
   return res;
 }
 
 vector<pair<double, double>> convexHull(vector<pair<double, double>> &points) {
   int n = points.size(), k = 0;
+  if (n < 2) return points;
   sort(points.begin(), points.end());
   vector<pair<double, double>> hull(2 * n);
   for (int i = 0; i < n; i++) {
@@ -109,9 +118,12 @@ vector<pair<double, double>> convexHull(vector<pair<double, double>> &points) {
 
 double area(vector<pair<double, double>> &poly) {
   int n = poly.size();
+  if (n < 3) return 0.0;
   double res = 0;
   for (int i = 0; i < n; i++) {
-    res += cross(poly[i], poly[(i + 1) % n], poly[(i + 2) % n]);
+    int j = (i + 1) % n;
+    res += poly[i].first * poly[j].second;
+    res -= poly[j].first * poly[i].second;
   }
-  return res / 2;
+  return abs(res) / 2.0;
 }

@@ -9,8 +9,6 @@ x = np.linspace(-100, 100, 200)
 
 def f(x):
     return x**2
-
-
 f = np.vectorize(f)
 y = f(x)
 
